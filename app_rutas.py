@@ -97,7 +97,7 @@ if file:
             m = folium.Map(location=[punto_inicio['Latitud'], punto_inicio['Longitud']], zoom_start=9)
             coords_mapa = []
             for i, row in df_ruta.iterrows():
-                if i==0 
+                if i==0: 
                     color = 'green' 
                 elif i == len(df_ruta)-1:
                     color = 'red'
