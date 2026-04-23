@@ -6,7 +6,7 @@ from scipy.spatial.distance import cdist
 
 st.set_page_config(page_title="Optimizador de Rutas GOIN", layout="wide")
 
-st.title("🚚 Sistema de Optimización de Rutas Logísticas")
+st.title("Ruteo de Visitas")
 
 # Base de datos de Sucursales GOIN
 sucursales_goin = [
