@@ -17,7 +17,7 @@ if "autenticado" not in st.session_state:
     st.session_state.autenticado = False
 
 def verificar_codigo():
-    if st.session_state.codigo_ingresado == "TU_CODIGO_AQUI":
+    if st.session_state.codigo_ingresado == "CODIGO_CORRECTO":
         st.session_state.autenticado = True
     else:
         st.error("Código incorrecto. Intenta de nuevo.")
