@@ -105,7 +105,7 @@ if file:
                     color = 'blue'
                 folium.Marker([row['Latitud'], row['Longitud']], popup=row['Nombre'], icon=folium.Icon(color=color)).add_to(m)
                 coords_mapa.append([row['Latitud'], row['Longitud']])
-            folium.PolyLine(coords_mapa, color="black", weight=3).add_to(m)
+            folium.PolyLine(coords_mapa, color="blue", weight=3).add_to(m)
             st_folium(m, width=700, height=500)
     else:
         st.error("Columnas requeridas: Nombre, Latitud, Longitud")
