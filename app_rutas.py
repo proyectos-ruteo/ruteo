@@ -4,81 +4,99 @@ import folium
 from streamlit_folium import st_folium
 from scipy.spatial.distance import cdist
 
-st.set_page_config(page_title="Optimizador de Rutas", layout="wide")
+st.set_page_config(page_title="Optimizador de Rutas GOIN", layout="wide")
 
-st.title("Optimizador de Rutas de GOIN - Logística")
-st.write("Sube el archivo con Nombre, Latitud y Longitud. Luego selecciona el origen y destino.")
+st.title("RUTEO")
 
-file = st.file_uploader("Sube tu archivo (Excel o CSV)", type=['csv', 'xlsx'])
+# Definición de Sucursales GOIN
+sucursales_goin = [
+    {"Nombre": "GOIN Central San Salvador", "Latitud": 13.694192750356294, "Longitud": -89.20764723605487},
+    {"Nombre": "GOIN Lourdes", "Latitud": 13.732142182396014, "Longitud": -89.37272523745887},
+    {"Nombre": "GOIN San Miguel", "Latitud": 13.4879882726561, "Longitud": -88.17665577285078},
+    {"Nombre": "GOIN Santa Ana", "Latitud": 13.985991202082642, "Longitud": -89.55802693152108}
+]
+df_sucursales = pd.DataFrame(sucursales_goin)
+
+file = st.file_uploader("1. Sube el archivo de entregas (Excel o CSV)", type=['csv', 'xlsx'])
 
 if file:
-    df = pd.read_excel(file) if file.name.endswith('xlsx') else pd.read_csv(file)
+    df_input = pd.read_excel(file) if file.name.endswith('xlsx') else pd.read_csv(file)
     
-    if all(col in df.columns for col in ['Nombre', 'Latitud', 'Longitud']):
+    # Estandarizar nombres de columnas por si vienen en inglés
+    df_input.rename(columns={'Latitude': 'Latitud', 'Longitude': 'Longitud', 'Nombre': 'Nombre'}, inplace=True)
+    
+    if all(col in df_input.columns for col in ['Nombre', 'Latitud', 'Longitud']):
         
-        # --- Configuración de Origen y Destino ---
-        st.sidebar.header("Configuración de la Ruta")
-        lista_nombres = df['Nombre'].tolist()
+        st.sidebar.header("Configuración de Ruta")
         
-        origen_nombre = st.sidebar.selectbox("Selecciona el Punto de Origen", lista_nombres)
-        # El destino excluye el origen para evitar errores
-        opciones_destino = [n for n in lista_nombres if n != origen_nombre]
-        destino_nombre = st.sidebar.selectbox("Selecciona el Punto de Destino", opciones_destino)
+        # --- SELECCIÓN DE ORIGEN ---
+        tipo_origen = st.sidebar.radio("Punto de Partida:", ["Sucursal GOIN", "Ubicación del Excel"])
+        
+        if tipo_origen == "Sucursal GOIN":
+            origen_sel = st.sidebar.selectbox("Selecciona la Sucursal:", df_sucursales['Nombre'].tolist())
+            punto_inicio = df_sucursales[df_sucursales['Nombre'] == origen_sel].iloc[0]
+        else:
+            origen_sel = st.sidebar.selectbox("Selecciona ubicación del Excel:", df_input['Nombre'].tolist())
+            punto_inicio = df_input[df_input['Nombre'] == origen_sel].iloc[0]
 
-        def optimizar_ruta(datos, inicio_n, fin_n):
-            # Identificar índices de inicio y fin
-            idx_inicio = datos[datos['Nombre'] == inicio_n].index[0]
-            idx_fin = datos[datos['Nombre'] == fin_n].index[0]
+        # --- SELECCIÓN DE DESTINO ---
+        # Filtramos para que el destino no sea igual al inicio si están en la misma lista
+        opciones_destino = df_input[df_input['Nombre'] != origen_sel]['Nombre'].tolist()
+        destino_sel = st.sidebar.selectbox("Selecciona Punto Final (del Excel):", opciones_destino)
+        punto_fin = df_input[df_input['Nombre'] == destino_sel].iloc[0]
+
+        def optimizar_logistica(inicio, fin, entregas):
+            # Crear lista de puntos intermedios (excluyendo el que se eligió como fin)
+            intermedios = entregas[entregas['Nombre'] != fin['Nombre']].copy()
+            # Si el inicio vino del Excel, también lo quitamos de los intermedios
+            intermedios = intermedios[intermedios['Nombre'] != inicio['Nombre']]
             
-            puntos = datos[['Latitud', 'Longitud']].values
-            pendientes = [i for i in range(len(puntos)) if i != idx_inicio and i != idx_fin]
+            puntos_coord = intermedios[['Latitud', 'Longitud']].values
+            ruta = [inicio]
+            pendientes = list(range(len(puntos_coord)))
             
-            ruta_indices = [idx_inicio]
-            
-            # Algoritmo de vecino más cercano para los puntos intermedios
+            # Algoritmo de cercanía
+            pos_actual = [inicio['Latitud'], inicio['Longitud']]
             while pendientes:
-                ultimo = ruta_indices[-1]
-                distancias = cdist([puntos[ultimo]], puntos[pendientes])[0]
-                mas_cercano = pendientes[distancias.argmin()]
-                ruta_indices.append(mas_cercano)
-                pendientes.remove(mas_cercano)
+                distancias = cdist([pos_actual], puntos_coord[pendientes])[0]
+                mas_cercano_idx = pendientes[distancias.argmin()]
+                ruta.append(intermedios.iloc[mas_cercano_idx])
+                pos_actual = [intermedios.iloc[mas_cercano_idx]['Latitud'], intermedios.iloc[mas_cercano_idx]['Longitud']]
+                pendientes.remove(mas_cercano_idx)
             
-            # Finalmente añadimos el destino
-            ruta_indices.append(idx_fin)
-            return datos.iloc[ruta_indices].reset_index(drop=True)
+            ruta.append(fin)
+            return pd.DataFrame(ruta)
 
-        df_optimizado = optimizar_ruta(df, origen_nombre, destino_nombre)
-        
-        # --- Visualización ---
+        df_ruta = optimizar_logistica(punto_inicio, punto_fin, df_input)
+
+        # --- MOSTRAR RESULTADOS ---
         col1, col2 = st.columns([1, 2])
         
         with col1:
             st.subheader("Hoja de Ruta")
-            st.write(f"**De:** {origen_nombre}  \n**A:** {destino_nombre}")
-            st.table(df_optimizado[['Nombre']]) # Usamos table para una vista más limpia
-            
-            csv = df_optimizado.to_csv(index=False).encode('utf-8')
-            st.download_button("Descargar CSV de la Ruta", data=csv, file_name="ruta_optimizada.csv")
-        
+            st.dataframe(df_ruta[['Nombre']])
+            csv = df_ruta.to_csv(index=False).encode('utf-8')
+            st.download_button("Descargar Ruta en CSV", data=csv, file_name="ruta_logistica.csv")
+
         with col2:
-            st.subheader("Mapa de la Trayectoria")
-            centro = [df['Latitud'].mean(), df['Longitud'].mean()]
-            m = folium.Map(location=centro, zoom_start=12)
+            st.subheader("Mapa del Recorrido")
+            m = folium.Map(location=[punto_inicio['Latitud'], punto_inicio['Longitud']], zoom_start=10)
             
-            puntos_ruta = []
-            for i, row in df_optimizado.iterrows():
-                # Color especial para inicio y fin
-                color_icono = 'green' if i == 0 else 'red' if i == len(df_optimizado)-1 else 'blue'
+            coords_mapa = []
+            for i, row in df_ruta.iterrows():
+                es_inicio = (i == 0)
+                es_fin = (i == len(df_ruta)-1)
+                color = 'green' if es_inicio else 'red' if es_fin else 'blue'
+                icon = 'play' if es_inicio else 'stop' if es_fin else 'info-sign'
                 
                 folium.Marker(
-                    [row['Latitud'], row['Longitud']], 
-                    popup=f"Parada {i+1}: {row['Nombre']}",
-                    tooltip=f"{i+1}. {row['Nombre']}",
-                    icon=folium.Icon(color=color_icono, icon='info-sign')
+                    [row['Latitud'], row['Longitud']],
+                    popup=f"Orden: {i+1} - {row['Nombre']}",
+                    icon=folium.Icon(color=color, icon=icon)
                 ).add_to(m)
-                puntos_ruta.append([row['Latitud'], row['Longitud']])
+                coords_mapa.append([row['Latitud'], row['Longitud']])
             
-            folium.PolyLine(puntos_ruta, color="blue", weight=3, opacity=0.7).add_to(m)
-            st_folium(m, width=800, height=550)
+            folium.PolyLine(coords_mapa, color="blue", weight=3, opacity=0.7).add_to(m)
+            st_folium(m, width=800, height=500)
     else:
-        st.error("Error: Asegúrate de que las columnas se llamen exactamente: Nombre, Latitud, Longitud")
+        st.error("Asegúrate de que el archivo tenga columnas: Nombre, Latitud, Longitud")
