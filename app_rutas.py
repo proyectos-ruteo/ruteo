@@ -18,7 +18,7 @@ def verificar_codigo():
         st.error("Código incorrecto. Intenta de nuevo.")
 
 if not st.session_state.autenticado:
-    st.title("Acceso Restringido")
+    st.title("Acceso Restringido")
     st.text_input("Ingresa el código de acceso para continuar:", type="password", key="codigo_ingresado", on_change=verificar_codigo)
     st.info("Este sistema es para uso exclusivo de personal autorizado de GOIN.")
     st.stop() 
