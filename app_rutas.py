@@ -6,8 +6,8 @@ from scipy.spatial.distance import cdist
 
 st.set_page_config(page_title="Acceso Privado - GOIN", layout="wide")
 
-# --- SISTEMA DE SEGURIDAD ---
-CODIGO_CORRECTO = "GOIN2026"
+
+CODIGO_CORRECTO = "grupogoin.api2026" # <--- Contraseña
 
 if "autenticado" not in st.session_state:
     st.session_state.autenticado = False
