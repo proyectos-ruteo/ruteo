@@ -4,9 +4,29 @@ import folium
 from streamlit_folium import st_folium
 from scipy.spatial.distance import cdist
 
-st.set_page_config(page_title="Optimizador de Rutas GOIN", layout="wide")
+st.set_page_config(page_title="Acceso Privado - GOIN", layout="wide")
 
-st.title("Ruteo de Visitas")
+# --- SISTEMA DE SEGURIDAD ---
+CODIGO_CORRECTO = "grupogoin" # <--- Cambia aquí tu contraseña
+
+if "autenticado" not in st.session_state:
+    st.session_state.autenticado = False
+
+def verificar_codigo():
+    if st.session_state.codigo_ingresado == CODIGO_CORRECTO:
+        st.session_state.autenticado = True
+    else:
+        st.error("Código incorrecto. Intenta de nuevo.")
+
+if not st.session_state.autenticado:
+    st.title("🔐 Acceso Restringido")
+    st.text_input("Ingresa el código de acceso para continuar:", type="password", key="codigo_ingresado", on_change=verificar_codigo)
+    st.info("Este sistema es para uso exclusivo de personal autorizado de GOIN.")
+    st.stop() # Detiene la ejecución del resto del código si no está autenticado
+
+# --- INICIO DEL SISTEMA DE RUTEO (Solo se ejecuta si se autentica) ---
+
+st.title("RUTEO ÓPTIMO")
 
 # Base de datos de Sucursales GOIN
 sucursales_goin = [
@@ -26,7 +46,10 @@ if file:
     if all(col in df_input.columns for col in ['Nombre', 'Latitud', 'Longitud']):
         
         st.sidebar.header("Configuración de la Jornada")
-        
+        if st.sidebar.button("Cerrar Sesión"):
+            st.session_state.autenticado = False
+            st.rerun()
+
         # --- SELECCIÓN DE ORIGEN ---
         st.sidebar.subheader("Punto de Salida")
         tipo_origen = st.sidebar.radio("Iniciar desde:", ["Sucursal GOIN", "Punto en Excel"], key="origen_tipo")
@@ -51,7 +74,6 @@ if file:
             punto_fin = df_input[df_input['Nombre'] == retorno_sel].iloc[0]
 
         def optimizar_logistica(inicio, fin, entregas):
-            # Filtrar entregas para no duplicar el inicio o el fin si están en el Excel
             puntos_intermedios = entregas.copy()
             puntos_intermedios = puntos_intermedios[puntos_intermedios['Nombre'] != inicio['Nombre']]
             puntos_intermedios = puntos_intermedios[puntos_intermedios['Nombre'] != fin['Nombre']]
@@ -62,7 +84,6 @@ if file:
             
             pos_actual = [inicio['Latitud'], inicio['Longitud']]
             
-            # Algoritmo de vecino más cercano
             while pendientes:
                 distancias = cdist([pos_actual], puntos_coord[pendientes])[0]
                 mas_cercano_idx = pendientes[distancias.argmin()]
@@ -82,9 +103,8 @@ if file:
         with col1:
             st.subheader("Plan de Ruta")
             st.write(f"**Salida:** {punto_inicio['Nombre']}")
-            st.write(f"**Llegada final:** {punto_fin['Nombre']}")
+            st.write(f"**Llegada:** {punto_fin['Nombre']}")
             
-            # Mostrar tabla numerada
             df_mostrar = df_ruta[['Nombre']].copy()
             df_mostrar.index = range(1, len(df_mostrar) + 1)
             st.table(df_mostrar)
@@ -100,8 +120,6 @@ if file:
             for i, row in df_ruta.iterrows():
                 is_start = (i == 0)
                 is_end = (i == len(df_ruta) - 1)
-                
-                # Definir estilo de marcador
                 color = 'green' if is_start else 'red' if is_end else 'blue'
                 icon = 'play' if is_start else 'home' if is_end else 'info-sign'
                 
