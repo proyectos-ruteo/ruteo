@@ -106,18 +106,23 @@ if file:
             m = folium.Map(location=[punto_inicio['Latitud'], punto_inicio['Longitud']], zoom_start=9)
             
             coords_mapa = []
-            for i, row in df_ruta.iterrows():
-                is_start = (i == 0)
-                is_end = (i == len(df_ruta) - 1)
-                color = 'green' if is_start else 'red' if is_end else 'blue'
-                icon = 'play' if is_start else 'home' if is_end else 'info-sign'
-                
-                folium.Marker(
-                    [row['Latitud'], row['Longitud']],
-                    popup=f"Parada {i+1}: {row['Nombre']}",
-                    tooltip=f"{i+1}. {row['Nombre']}",
-                    icon=folium.Icon(color=color, icon=icon)
-                ).add_to(m)
+        for i, row in df_ruta.iterrows():
+            coords_mapa.append([row['Latitud'], row['Longitud']])
+            if i == 0:
+                color, icon = 'green', 'play'
+            elif i == len(df_ruta) - 1:
+                if row['Nombre'] == df_ruta.iloc[0]['Nombre']:
+                    continue
+                color, icon = 'red', 'home'
+            else:
+                color, icon = 'blue', 'info-sign'
+            
+            folium.Marker(
+                [row['Latitud'], row['Longitud']],
+                popup=f"Parada {i+1}: {row['Nombre']}",
+                tooltip=f"{i+1}. {row['Nombre']}",
+                icon=folium.Icon(color=color, icon=icon)
+            ).add_to(m)
                 coords_mapa.append([row['Latitud'], row['Longitud']])
             
             folium.PolyLine(coords_mapa, color="blue", weight=3, opacity=0.7).add_to(m)
