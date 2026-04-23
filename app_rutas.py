@@ -91,13 +91,19 @@ if file:
             df_mostrar.index = range(1, len(df_mostrar) + 1)
             st.table(df_mostrar)
             csv = df_ruta.to_csv(index=False).encode('utf-8')
-            st.download_button("📥 Descargar CSV", data=csv, file_name="ruta_goin.csv")
+            st.download_button("Descargar CSV", data=csv, file_name="ruta_goin.csv")
         with col2:
             st.subheader("Mapa")
             m = folium.Map(location=[punto_inicio['Latitud'], punto_inicio['Longitud']], zoom_start=9)
             coords_mapa = []
             for i, row in df_ruta.iterrows():
-                color = 'green' if i == 0 else 'red' if i == len(df_ruta)-1 else 'blue'
+                if i==0 
+                    color = 'green' 
+                elif i == len(df_ruta)-1:
+                    color = 'red'
+                else:
+                    color = 'blue'
+                    colorelse 'blue'
                 folium.Marker([row['Latitud'], row['Longitud']], popup=row['Nombre'], icon=folium.Icon(color=color)).add_to(m)
                 coords_mapa.append([row['Latitud'], row['Longitud']])
             folium.PolyLine(coords_mapa, color="blue", weight=3).add_to(m)
