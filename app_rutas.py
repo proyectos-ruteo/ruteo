@@ -6,15 +6,16 @@ from scipy.spatial.distance import cdist
 
 st.set_page_config(page_title="Acceso Privado - GOIN", layout="wide")
 
-CODIGO_CORRECTO = "grupogoin" # <- Contraseña
+CODIGO_CORRECTO = "grupogoin.api2026" # <-Contraseña
+
 if "autenticado" not in st.session_state:
-    st.session_state.autenticado = False
+    st.session_state.autenticado = False
 
 def verificar_codigo():
-    if st.session_state.codigo_ingresado == CODIGO_CORRECTO:
-        st.session_state.autenticado = True
-    else:
-        st.error("Código incorrecto. Intenta de nuevo.")
+    if st.session_state.codigo_ingresado == CODIGO_CORRECTO:
+        st.session_state.autenticado = True
+    else:
+        st.error("Código incorrecto. Intenta de nuevo.")
 
 if not st.session_state.autenticado:
     st.title("Acceso Restringido")
