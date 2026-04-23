@@ -19,11 +19,11 @@ def verificar_codigo():
 
 if not st.session_state.autenticado:
     st.title("Acceso Restringido")
-    st.text_input("Ingresa el código de acceso para continuar:", type="password", key="codigo_ingresado", on_change=verificar_codigo)
-    st.info("Este sistema es para uso exclusivo de personal autorizado de GOIN.")
-    st.stop() 
+    st.text_input("Ingresa el código de acceso para continuar:", type="password", key="codigo_ingresado", on_change=verificar_codigo)
+    st.info("Este sistema es para uso exclusivo de personal autorizado de GOIN.")
+    st.stop() 
 
-st.title("RUTEO ÓPTIMO")
+st.title("RUTEO ÓPTIMO - GOIN")
 
 sucursales_goin = [
     {"Nombre": "GOIN Central San Salvador", "Latitud": 13.694192750356294, "Longitud": -89.20764723605487},
