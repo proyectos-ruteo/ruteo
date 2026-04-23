@@ -6,29 +6,30 @@ from scipy.spatial.distance import cdist
 
 st.set_page_config(page_title="Acceso Privado - GOIN", layout="wide")
 
-# --- SISTEMA DE SEGURIDAD ---
-CODIGO_CORRECTO = "grupogoin" # <--- Cambia aquí tu contraseña
+CODIGO_CORRECTO = "grupogoin" # <- Contraseña
+import streamlit as st
+import pandas as pd
+import folium
+from streamlit_folium import st_folium
+from scipy.spatial.distance import cdist
 
 if "autenticado" not in st.session_state:
     st.session_state.autenticado = False
 
 def verificar_codigo():
-    if st.session_state.codigo_ingresado == CODIGO_CORRECTO:
+    if st.session_state.codigo_ingresado == "TU_CODIGO_AQUI":
         st.session_state.autenticado = True
     else:
         st.error("Código incorrecto. Intenta de nuevo.")
 
 if not st.session_state.autenticado:
-    st.title("🔐 Acceso Restringido")
+    st.title("Acceso Restringido")
     st.text_input("Ingresa el código de acceso para continuar:", type="password", key="codigo_ingresado", on_change=verificar_codigo)
     st.info("Este sistema es para uso exclusivo de personal autorizado de GOIN.")
-    st.stop() # Detiene la ejecución del resto del código si no está autenticado
-
-# --- INICIO DEL SISTEMA DE RUTEO (Solo se ejecuta si se autentica) ---
+    st.stop()
 
 st.title("RUTEO ÓPTIMO")
 
-# Base de datos de Sucursales GOIN
 sucursales_goin = [
     {"Nombre": "GOIN Central San Salvador", "Latitud": 13.694192750356294, "Longitud": -89.20764723605487},
     {"Nombre": "GOIN Lourdes", "Latitud": 13.732142182396014, "Longitud": -89.37272523745887},
@@ -50,9 +51,9 @@ if file:
             st.session_state.autenticado = False
             st.rerun()
 
-        # --- SELECCIÓN DE ORIGEN ---
         st.sidebar.subheader("Punto de Salida")
         tipo_origen = st.sidebar.radio("Iniciar desde:", ["Sucursal GOIN", "Punto en Excel"], key="origen_tipo")
+        
         if tipo_origen == "Sucursal GOIN":
             origen_sel = st.sidebar.selectbox("Sucursal de Salida:", df_sucursales['Nombre'].tolist())
             punto_inicio = df_sucursales[df_sucursales['Nombre'] == origen_sel].iloc[0]
@@ -60,7 +61,6 @@ if file:
             origen_sel = st.sidebar.selectbox("Punto de Salida (Excel):", df_input['Nombre'].tolist())
             punto_inicio = df_input[df_input['Nombre'] == origen_sel].iloc[0]
 
-        # --- SELECCIÓN DE RETORNO ---
         st.sidebar.subheader("Punto de Retorno")
         tipo_retorno = st.sidebar.radio("Finalizar en:", ["Misma sucursal de salida", "Otra sucursal GOIN", "Punto en Excel"], key="retorno_tipo")
         
@@ -81,7 +81,6 @@ if file:
             puntos_coord = puntos_intermedios[['Latitud', 'Longitud']].values
             ruta = [inicio]
             pendientes = list(range(len(puntos_coord)))
-            
             pos_actual = [inicio['Latitud'], inicio['Longitud']]
             
             while pendientes:
@@ -97,7 +96,6 @@ if file:
 
         df_ruta = optimizar_logistica(punto_inicio, punto_fin, df_input)
 
-        # --- INTERFAZ DE RESULTADOS ---
         col1, col2 = st.columns([1, 2])
         
         with col1:
@@ -110,7 +108,7 @@ if file:
             st.table(df_mostrar)
             
             csv = df_ruta.to_csv(index=False).encode('utf-8')
-            st.download_button("📥 Descargar Hoja de Ruta", data=csv, file_name="ruta_optimizada_goin.csv")
+            st.download_button("Descargar Hoja de Ruta", data=csv, file_name="ruta_optimizada_goin.csv")
 
         with col2:
             st.subheader("Mapa Interactivo")
