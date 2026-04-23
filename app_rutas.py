@@ -26,22 +26,18 @@ if not st.session_state.autenticado:
 st.title("RUTEO ÓPTIMO - GOIN")
 
 sucursales_goin = [
-    {"Nombre": "GOIN Central San Salvador", "Latitud": 13.694192750356294, "Longitud": -89.20764723605487},
-    {"Nombre": "GOIN Lourdes", "Latitud": 13.732142182396014, "Longitud": -89.37272523745887},
-    {"Nombre": "GOIN San Miguel", "Latitud": 13.4879882726561, "Longitud": -88.17665577285078},
-    {"Nombre": "GOIN Santa Ana", "Latitud": 13.985991202082642, "Longitud": -89.55802693152108}
+    {"Nombre": "GOIN Central San Salvador", "Latitud": 13.694192750356294, "Longitud": -89.20764723605487},
+    {"Nombre": "GOIN Lourdes", "Latitud": 13.732142182396014, "Longitud": -89.37272523745887},
+    {"Nombre": "GOIN San Miguel", "Latitud": 13.4879882726561, "Longitud": -88.17665577285078},
+    {"Nombre": "GOIN Santa Ana", "Latitud": 13.985991202082642, "Longitud": -89.55802693152108}
 ]
 df_sucursales = pd.DataFrame(sucursales_goin)
-
 file = st.file_uploader("1. Sube el archivo de entregas (Excel o CSV)", type=['csv', 'xlsx'])
-
 if file:
-    df_input = pd.read_excel(file) if file.name.endswith('xlsx') else pd.read_csv(file)
-    df_input.rename(columns={'Latitude': 'Latitud', 'Longitude': 'Longitud', 'Name': 'Nombre'}, inplace=True)
-    
-    if all(col in df_input.columns for col in ['Nombre', 'Latitud', 'Longitud']):
-        
-        st.sidebar.header("Configuración de la Jornada")
+    df_input = pd.read_excel(file) if file.name.endswith('xlsx') else pd.read_csv(file)
+    df_input.rename(columns={'Latitude': 'Latitud', 'Longitude': 'Longitud', 'Name': 'Nombre'}, inplace=True)
+    if all(col in df_input.columns for col in ['Nombre', 'Latitud', 'Longitud']):
+        st.sidebar.header("Configuración de la Jornada")
         if st.sidebar.button("Cerrar Sesión"):
             st.session_state.autenticado = False
             st.rerun()
