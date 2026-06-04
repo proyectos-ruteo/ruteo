@@ -28,7 +28,7 @@ st.title("RUTEO ÓPTIMO - GOIN")
 sucursales_goin = [
     {"Nombre": "GOIN Central San Salvador", "Latitud": 13.694192750356294, "Longitud": -89.20764723605487},
     {"Nombre": "GOIN Lourdes", "Latitud": 13.732142182396014, "Longitud": -89.37272523745887},
-    {"Nombre": "GOIN San Miguel", "Latitud": 13.4879882726561, "Longitud": -88.17665577285078},
+    {"Nombre": "GOIN San Miguel", "Latitud": 13.487677802374689, "Longitud": -88.17665741503927},
     {"Nombre": "GOIN Santa Ana", "Latitud": 13.985991202082642, "Longitud": -89.55802693152108}
 ]
 df_sucursales = pd.DataFrame(sucursales_goin)
